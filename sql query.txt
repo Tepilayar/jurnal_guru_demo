@@ -165,7 +165,7 @@ WITH CHECK (
     true -- Sementara izinkan semua untuk testing
 );
 
-2. Policy untuk Tabel Jurnal
+
 -- Aktifkan RLS untuk jurnal
 ALTER TABLE jurnal ENABLE ROW LEVEL SECURITY;
 
