@@ -155,9 +155,14 @@
     </div>
 
     <script>
+           const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            alert('Silakan login terlebih dahulu.');
+            window.location.href = 'index.html';
+        }
         // Initialize Supabase
-        const supabaseUrl = 'https://tyjbnvmzspiywczqldaq.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5amJudm16c3BpeXdjenFsZGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MDM0NjYsImV4cCI6MjA3NTA3OTQ2Nn0.CWmQXswt5Zplrkz2yO21ZmTz95hYZUymHRl5pINQcgk';
+        const supabaseUrl = 'https://nnbtezxnaqstvftzwjux.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uYnRlenhuYXFzdHZmdHp3anV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MDQ5NzMsImV4cCI6MjA3NTA4MDk3M30.EgZVDhb8QsQnDMNDw4l1K0ZxJNsB-fxLTgeFZ6GwYvs';
          const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         // Teachers data will be loaded from database
