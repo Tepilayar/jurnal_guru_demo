@@ -150,6 +150,11 @@
 <div id="jurnal-container"></div>
 
 <script>
+     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            alert('Silakan login terlebih dahulu.');
+            window.location.href = 'index.html';
+        }
   // Initialize Supabase
   const supabaseUrl = '';
   const supabaseKey = '';
