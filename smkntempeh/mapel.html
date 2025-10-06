@@ -151,7 +151,8 @@
         // Supabase configuration
         const supabaseUrl = 'https://styaprymdezgmrkldpjl.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0eWFwcnltZGV6Z21ya2xkcGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MjI0MzQsImV4cCI6MjA3NTI5ODQzNH0.KzjRNqan2Qv_B0B33_Eo0qvRZhi5nRTFYz0g301AZ6k';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
         let mapelData = [];
         let editingId = null;
@@ -166,7 +167,7 @@
         // Load data from Supabase
         async function loadMapelData() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('mapel')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -281,7 +282,7 @@
             }
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('mapel')
                     .insert([
                         {
@@ -338,7 +339,7 @@
             }
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('mapel')
                     .update({
                         nama_mapel: namaMapel,
@@ -406,7 +407,7 @@
             if (!deletingId) return;
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('mapel')
                     .delete()
                     .eq('id', deletingId);
