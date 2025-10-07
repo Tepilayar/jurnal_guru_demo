@@ -610,33 +610,7 @@
                     console.log('Database authentication failed, using fallback:', error);
                     // Fallback to hardcoded users
                     const validUsers = [
-                        {
-                            id: 'admin-001',
-                            username: 'admin',
-                            password: 'admin123',
-                            nama_lengkap: 'Administrator',
-                            role: 'admin',
-                            mapel: null,
-                            is_active: true
-                        },
-                        {
-                            id: 'guru-001',
-                            username: 'guru1',
-                            password: 'guru123',
-                            nama_lengkap: 'Guru Matematika',
-                            role: 'teacher',
-                            mapel: 'Matematika',
-                            is_active: true
-                        },
-                        {
-                            id: 'guru-002',
-                            username: 'guru2',
-                            password: 'guru123',
-                            nama_lengkap: 'Guru Bahasa Indonesia',
-                            role: 'teacher',
-                            mapel: 'Bahasa Indonesia',
-                            is_active: true
-                        }
+                       
                     ];
                     
                     const user = validUsers.find(u => 
@@ -658,33 +632,7 @@
                 console.error('Error authenticating user:', error);
                 // Fallback authentication
                 const validUsers = [
-                    {
-                        id: 'admin-001',
-                        username: 'admin',
-                        password: 'admin123',
-                        nama_lengkap: 'Administrator',
-                        role: 'admin',
-                        mapel: null,
-                        is_active: true
-                    },
-                    {
-                        id: 'guru-001',
-                        username: 'guru1',
-                        password: 'guru123',
-                        nama_lengkap: 'Guru Matematika',
-                        role: 'teacher',
-                        mapel: 'Matematika',
-                        is_active: true
-                    },
-                    {
-                        id: 'guru-002',
-                        username: 'guru2',
-                        password: 'guru123',
-                        nama_lengkap: 'Guru Bahasa Indonesia',
-                        role: 'teacher',
-                        mapel: 'Bahasa Indonesia',
-                        is_active: true
-                    }
+                    
                 ];
                 
                 const user = validUsers.find(u => 
@@ -974,7 +922,8 @@
 
         // Set tanggal hari ini dan load data
         document.addEventListener('DOMContentLoaded', async function() {
-            const today = new Date().toISOString().split('T')[0];
+           // const today = new Date().toISOString().split('T')[0];
+           const today = new Date().toLocaleDateString('en-CA');
             document.getElementById('tanggalPresensi').value = today;
             document.getElementById('filterTanggal').value = today;
             document.getElementById('filterTanggalJurnal').value = today;
