@@ -1,0 +1,48 @@
+create or replace function rekap_presensi_guru(
+    guru_uuid uuid,
+    bulan integer default null,
+    tahun integer default null
+)
+returns table (
+    siswa_id int,
+    nama varchar,
+    nis varchar,
+    kelas varchar,
+    hadir int,
+    sakit int,
+    ijin int,
+    alpha int,
+    dispen int,
+    total int,
+    persentase numeric
+)
+as $$
+begin
+  return query
+  select 
+    s.id as siswa_id,
+    s.nama,
+    s.nis,
+    s.kelas,
+    count(p.status) filter (where p.status = 'Hadir')::int as hadir,
+    count(p.status) filter (where p.status = 'Sakit')::int as sakit,
+    count(p.status) filter (where p.status = 'Ijin')::int as ijin,
+    count(p.status) filter (where p.status = 'Alpha')::int as alpha,
+    count(p.status) filter (where p.status = 'Dispen')::int as dispen,
+    count(p.status)::int as total,
+    round(
+      (
+        (count(p.status) filter (where p.status in ('Hadir','Dispen'))::numeric
+         / nullif(count(p.status),0)) * 100
+      ), 1
+    ) as persentase
+  from siswa s
+  left join presensi p 
+    on s.id = p.siswa_id 
+    and p.guru_id = guru_uuid
+    and (bulan is null or extract(month from p.tanggal) = bulan)
+    and (tahun is null or extract(year from p.tanggal) = tahun)
+  group by s.id, s.nama, s.nis, s.kelas
+  order by s.kelas, s.nama;
+end;
+$$ language plpgsql stable;
