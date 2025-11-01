@@ -57,12 +57,23 @@
         </header>
 
         <!-- Main Menu -->
-        <div id="mainMenu" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+       <div id="mainMenu" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <div id="menuManajemenSiswa" onclick="showPage('manajemenSiswa')" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
                     <div class="text-4xl mb-4">👥</div>
                     <h3 class="text-lg font-semibold text-gray-800">Manajemen Siswa</h3>
                     <p class="text-gray-600 text-sm mt-2">Kelola data siswa</p>
+                </div>
+                <div id="menuManajemenGuru" onclick="window.location.href='guru.html'" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
+                    <div class="text-4xl mb-4">🧑‍🏫</div>
+                    <h3 class="text-lg font-semibold text-gray-800">Manajemen Guru</h3>
+                    <p class="text-gray-600 text-sm mt-2">Kelola data Guru</p>
+                </div>
+
+                <div id="menuManajemenMapel" onclick="window.location.href='mapel.html'" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
+                    <div class="text-4xl mb-4">📕</div>
+                    <h3 class="text-lg font-semibold text-gray-800">Manajemen Mapel</h3>
+                    <p class="text-gray-600 text-sm mt-2">Kelola data Mapel</p>
                 </div>
                 <div onclick="showPage('inputPresensi')" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
                     <div class="text-4xl mb-4">✅</div>
@@ -78,6 +89,11 @@
                     <div class="text-4xl mb-4">📝</div>
                     <h3 class="text-lg font-semibold text-gray-800">Rekap Jurnal</h3>
                     <p class="text-gray-600 text-sm mt-2">Lihat jurnal mengajar</p>
+                </div>
+                <div id="menuJurnalkelas" onclick="window.location.href='rekap-kelas.html'" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
+                    <div class="text-4xl mb-4">📕</div>
+                    <h3 class="text-lg font-semibold text-gray-800">Jurnal Kelas</h3>
+                    <p class="text-gray-600 text-sm mt-2">Lihat Jurnal Kelas</p>
                 </div>
             </div>
         </div>
@@ -840,7 +856,7 @@
 
                 populateMapelDropdowns();
                 console.log('Mapel options loaded successfully');
-                showAlert(`${mapelData.length} mata pelajaran berhasil dimuat`, 'success');
+                // showAlert(`${mapelData.length} mata pelajaran berhasil dimuat`, 'success');
 
             } catch (error) {
                 console.error('Error loading mapel options:', error);
@@ -1004,7 +1020,7 @@
                 await loadMapelOptions();
             }
             
-            showAlert('Aplikasi berhasil terhubung ke database.', 'success');
+            // showAlert('Aplikasi berhasil terhubung ke database.', 'success');
         });
 
         // Login Function
@@ -1052,13 +1068,29 @@
             document.getElementById('userInfo').textContent = '';
         }
 
-        function updateMenuVisibility() {
+       function updateMenuVisibility() {
             const menuManajemenSiswa = document.getElementById('menuManajemenSiswa');
             
             if (currentUser && currentUser.role === 'teacher') {
                 menuManajemenSiswa.style.display = 'none';
             } else {
                 menuManajemenSiswa.style.display = 'block';
+            }
+
+            const menuManajemenMapel = document.getElementById('menuManajemenMapel');
+            
+            if (currentUser && currentUser.role === 'teacher') {
+                menuManajemenMapel.style.display = 'none';
+            } else {
+                menuManajemenMapel.style.display = 'block';
+            }
+
+            const menuManajemenGuru = document.getElementById('menuManajemenGuru');
+            
+            if (currentUser && currentUser.role === 'teacher') {
+                menuManajemenGuru.style.display = 'none';
+            } else {
+                menuManajemenGuru.style.display = 'block';
             }
         }
 
@@ -1577,82 +1609,91 @@
         }
 
         function rekapSemuaWaktu() {
-            const kelas = document.getElementById('filterKelasRekap').value;
-            
-            const presensiGuru = presensiData.filter(p => p.guru_id == currentUser.id);
-            
-            const siswaIds = [...new Set(presensiGuru.map(p => p.siswa_id))];
-            let siswaFilter = siswaData.filter(s => siswaIds.includes(s.id));
-            
-            if (kelas) {
-                siswaFilter = siswaFilter.filter(s => s.kelas === kelas);
-            }
-            
-            let html = `
-                <h3 class="text-lg font-semibold mb-4">Rekap Semua Waktu</h3>
-                <p class="text-sm text-gray-600 mb-4">Menampilkan rekap presensi untuk mata pelajaran yang Anda ajar</p>
-                <div class="overflow-x-auto">
-                    <table class="w-full table-auto">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="px-4 py-2 text-left">No</th>
-                                <th class="px-4 py-2 text-left">Nama</th>
-                                <th class="px-4 py-2 text-left">NIS</th>
-                                <th class="px-4 py-2 text-left">Kelas</th>
-                                <th class="px-4 py-2 text-left">Hadir</th>
-                                <th class="px-4 py-2 text-left">Sakit</th>
-                                <th class="px-4 py-2 text-left">Ijin</th>
-                                <th class="px-4 py-2 text-left">Alpha</th>
-                                <th class="px-4 py-2 text-left">Dispen</th>
-                                <th class="px-4 py-2 text-left">Total</th>
-                                <th class="px-4 py-2 text-left">Persentase</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            if (siswaFilter.length === 0) {
-                html += `
-                    <tr>
-                        <td colspan="11" class="px-4 py-8 text-center text-gray-500">
-                            Tidak ada data presensi untuk mata pelajaran yang Anda ajar
-                        </td>
+    const kelas = document.getElementById('filterKelasRekap').value;
+    const presensiGuru = presensiData.filter(p => p.guru_id == currentUser.id);
+
+    // Ambil semua siswa yang diajar guru
+    const siswaIds = [...new Set(presensiGuru.map(p => p.siswa_id))];
+    let siswaFilter = siswaData.filter(s => siswaIds.includes(s.id));
+
+    // Jika ada filter kelas
+    if (kelas) {
+        siswaFilter = siswaFilter.filter(s => s.kelas === kelas);
+    }
+
+    // 🔹 Urutkan berdasarkan kelas dan nama
+    siswaFilter.sort((a, b) => {
+        if (a.kelas < b.kelas) return -1;
+        if (a.kelas > b.kelas) return 1;
+        return a.nama.localeCompare(b.nama);
+    });
+
+    let html = `
+        <h3 class="text-lg font-semibold mb-4">Rekap Semua Waktu</h3>
+        <p class="text-sm text-gray-600 mb-4">Menampilkan rekap presensi untuk mata pelajaran yang Anda ajar</p>
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-2 text-left">No</th>
+                        <th class="px-4 py-2 text-left">Nama</th>
+                        <th class="px-4 py-2 text-left">NIS</th>
+                        <th class="px-4 py-2 text-left">Kelas</th>
+                        <th class="px-4 py-2 text-left">Hadir</th>
+                        <th class="px-4 py-2 text-left">Sakit</th>
+                        <th class="px-4 py-2 text-left">Ijin</th>
+                        <th class="px-4 py-2 text-left">Alpha</th>
+                        <th class="px-4 py-2 text-left">Dispen</th>
+                        <th class="px-4 py-2 text-left">Total</th>
+                        <th class="px-4 py-2 text-left">Persentase</th>
                     </tr>
-                `;
-            } else {
-                siswaFilter.forEach((siswa, index) => {
-                    const presensiSiswa = presensiGuru.filter(p => p.siswa_id === siswa.id);
-                    
-                    const hadir = presensiSiswa.filter(p => p.status === 'Hadir').length;
-                    const sakit = presensiSiswa.filter(p => p.status === 'Sakit').length;
-                    const ijin = presensiSiswa.filter(p => p.status === 'Ijin').length;
-                    const alpha = presensiSiswa.filter(p => p.status === 'Alpha').length;
-                    const dispen = presensiSiswa.filter(p => p.status === 'Dispen').length;
-                    
-                    const total = presensiSiswa.length;
-                    const persentase = total > 0 ? (((hadir + dispen) / total) * 100).toFixed(1) : 0;
-                    
-                    html += `
-                        <tr class="border-b">
-                            <td class="px-4 py-2">${index + 1}</td>
-                            <td class="px-4 py-2">${siswa.nama}</td>
-                            <td class="px-4 py-2">${siswa.nis || '-'}</td>
-                            <td class="px-4 py-2">${siswa.kelas}</td>
-                            <td class="px-4 py-2 text-green-600">${hadir}</td>
-                            <td class="px-4 py-2 text-yellow-600">${sakit}</td>
-                            <td class="px-4 py-2 text-blue-600">${ijin}</td>
-                            <td class="px-4 py-2 text-red-600">${alpha}</td>
-                            <td class="px-4 py-2 text-purple-600">${dispen}</td>
-                            <td class="px-4 py-2 font-semibold">${total}</td>
-                            <td class="px-4 py-2 font-semibold">${persentase}%</td>
-                        </tr>
-                    `;
-                });
-            }
-            
-            html += '</tbody></table></div>';
-            document.getElementById('hasilRekap').innerHTML = html;
-        }
+                </thead>
+                <tbody>
+    `;
+
+    if (siswaFilter.length === 0) {
+        html += `
+            <tr>
+                <td colspan="11" class="px-4 py-8 text-center text-gray-500">
+                    Tidak ada data presensi untuk mata pelajaran yang Anda ajar
+                </td>
+            </tr>
+        `;
+    } else {
+        siswaFilter.forEach((siswa, index) => {
+            const presensiSiswa = presensiGuru.filter(p => p.siswa_id === siswa.id);
+
+            const hadir = presensiSiswa.filter(p => p.status === 'Hadir').length;
+            const sakit = presensiSiswa.filter(p => p.status === 'Sakit').length;
+            const ijin = presensiSiswa.filter(p => p.status === 'Ijin').length;
+            const alpha = presensiSiswa.filter(p => p.status === 'Alpha').length;
+            const dispen = presensiSiswa.filter(p => p.status === 'Dispen').length;
+
+            const total = presensiSiswa.length;
+            const persentase = total > 0 ? (((hadir + dispen) / total) * 100).toFixed(1) : 0;
+
+            html += `
+                <tr class="border-b">
+                    <td class="px-4 py-2">${index + 1}</td>
+                    <td class="px-4 py-2">${siswa.nama}</td>
+                    <td class="px-4 py-2">${siswa.nis || '-'}</td>
+                    <td class="px-4 py-2">${siswa.kelas}</td>
+                    <td class="px-4 py-2 text-green-600">${hadir}</td>
+                    <td class="px-4 py-2 text-yellow-600">${sakit}</td>
+                    <td class="px-4 py-2 text-blue-600">${ijin}</td>
+                    <td class="px-4 py-2 text-red-600">${alpha}</td>
+                    <td class="px-4 py-2 text-purple-600">${dispen}</td>
+                    <td class="px-4 py-2 font-semibold">${total}</td>
+                    <td class="px-4 py-2 font-semibold">${persentase}%</td>
+                </tr>
+            `;
+        });
+    }
+
+    html += '</tbody></table></div>';
+    document.getElementById('hasilRekap').innerHTML = html;
+}
+
 
         function loadJurnal() {
             const tanggal = document.getElementById('filterTanggalJurnal').value;
