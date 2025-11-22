@@ -1611,17 +1611,10 @@
       async function rekapSemuaWaktu() {
     const kelas = document.getElementById('filterKelasRekap').value;
 
-    // Ambil data user aktif (guru)
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-        console.error('Gagal mendapatkan user:', userError);
-        alert('Gagal memuat data guru.');
-        return;
-    }
-
+   
     // Ambil data rekap langsung dari fungsi RPC
     const { data, error } = await supabaseClient.rpc('rekap_presensi_guru', {
-        guru_uuid: user.id, // auth_id guru aktif
+        guru_uuid: currentUser.id, // auth_id guru aktif
         bulan: null, // tampilkan semua waktu
         tahun: null
     });
