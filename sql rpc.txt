@@ -1,48 +1,50 @@
-create or replace function rekap_presensi_guru(
+DROP FUNCTION IF EXISTS rekap_presensi_guru(uuid, integer, integer);
+
+CREATE OR REPLACE FUNCTION rekap_presensi_guru(
     guru_uuid uuid,
     bulan integer default null,
     tahun integer default null
 )
-returns table (
-    siswa_id int,
-    nama varchar,
-    nis varchar,
-    kelas varchar,
-    hadir int,
-    sakit int,
-    ijin int,
-    alpha int,
-    dispen int,
-    total int,
+RETURNS TABLE (
+    siswa_id integer,
+    nama_siswa text,
+    kelas text,
+    total_hadir integer,
+    total_sakit integer,
+    total_ijin integer,
+    total_alpha integer,
+    total_dispen integer,
+    total_semua integer,
     persentase numeric
 )
-as $$
-begin
-  return query
-  select 
-    s.id as siswa_id,
-    s.nama,
-    s.nis,
-    s.kelas,
-    count(p.status) filter (where p.status = 'Hadir')::int as hadir,
-    count(p.status) filter (where p.status = 'Sakit')::int as sakit,
-    count(p.status) filter (where p.status = 'Ijin')::int as ijin,
-    count(p.status) filter (where p.status = 'Alpha')::int as alpha,
-    count(p.status) filter (where p.status = 'Dispen')::int as dispen,
-    count(p.status)::int as total,
-    round(
-      (
-        (count(p.status) filter (where p.status in ('Hadir','Dispen'))::numeric
-         / nullif(count(p.status),0)) * 100
-      ), 1
-    ) as persentase
-  from siswa s
-  left join presensi p 
-    on s.id = p.siswa_id 
-    and p.guru_id = guru_uuid
-    and (bulan is null or extract(month from p.tanggal) = bulan)
-    and (tahun is null or extract(year from p.tanggal) = tahun)
-  group by s.id, s.nama, s.nis, s.kelas
-  order by s.kelas, s.nama;
-end;
-$$ language plpgsql stable;
+LANGUAGE sql
+AS $$
+  SELECT
+      s.id AS siswa_id,
+      s.nama AS nama_siswa,
+      s.kelas,
+      COUNT(*) FILTER (WHERE p.status = 'Hadir') AS total_hadir,
+      COUNT(*) FILTER (WHERE p.status = 'Sakit') AS total_sakit,
+      COUNT(*) FILTER (WHERE p.status = 'Ijin') AS total_ijin,
+      COUNT(*) FILTER (WHERE p.status = 'Alpha') AS total_alpha,
+      COUNT(*) FILTER (WHERE p.status = 'Dispen') AS total_dispen,
+      COUNT(*) AS total_semua,
+      ROUND(
+        (
+          (
+            COUNT(*) FILTER (WHERE p.status IN ('Hadir', 'Dispen'))
+          )::decimal / NULLIF(COUNT(*), 0)
+        ) * 100, 1
+      ) AS persentase
+  FROM presensi p
+  JOIN siswa s ON s.id = p.siswa_id
+  WHERE 
+      p.guru_id = guru_uuid
+      AND (bulan IS NULL OR EXTRACT(MONTH FROM p.tanggal) = bulan)
+      AND (tahun IS NULL OR EXTRACT(YEAR FROM p.tanggal) = tahun)
+      AND s.kelas IN (
+          SELECT DISTINCT kelas FROM presensi WHERE guru_id = guru_uuid
+      )
+  GROUP BY s.id, s.nama, s.kelas
+  ORDER BY s.nama;
+$$;
