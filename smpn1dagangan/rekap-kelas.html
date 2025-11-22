@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Jurnal Mengajar Guru</title>
+  <title>Jurnal Kelas</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
   body {
@@ -167,6 +167,12 @@ th:nth-child(8), td:nth-child(8) {
 <!-- Header dan Controls -->
 <div class="no-print" style="margin-bottom: 30px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
   <div>
+  <label for="kelasSelect" style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Pilih Kelas:</label>
+  <select id="kelasSelect" onchange="generateMonthlyJournal()" style="padding: 8px; border: 1px solid #ccc; font-size: 14px; border-radius: 3px;">
+    <option value="">-- Semua Kelas --</option>
+  </select>
+</div>
+  <div>
     <label for="bulanSelect" style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Pilih Bulan:</label>
     <select id="bulanSelect" onchange="generateMonthlyJournal()" style="padding: 8px; border: 1px solid #ccc; font-size: 14px; border-radius: 3px;">
       <option value="">-- Pilih Bulan --</option>
@@ -197,13 +203,17 @@ th:nth-child(8), td:nth-child(8) {
   </div>
 </div>
 
+<div id="judulContainer" style="display: none; text-align: center; width: 100%; margin-top: 20px; margin-bottom: 20px;">
+  <h2 id="judulJurnal" style="font-size: 28px; font-weight: bold; display: inline-block;">Jurnal Kelas</h2>
+</div>
+
 <div id="jurnal-container"></div>
 
 <script>
   // Initialize Supabase
   const supabaseUrl = 'https://ztsckdzdqyfsdwmkoedq.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0c2NrZHpkcXlmc2R3bWtvZWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NTE5NjIsImV4cCI6MjA3NTIyNzk2Mn0.9gqhfVXGTKttiXrBX9rCZTp9uq-MhjDwNHq23R_ukjo';
-              
+                    
   const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   const hariList = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
@@ -265,29 +275,66 @@ th:nth-child(8), td:nth-child(8) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) {
     alert("Anda harus login terlebih dahulu");
-    window.location.href = "dashboard.html"; // redirect kalau belum login
+    window.location.href = "dashboard.html";
     return;
   }
 
-  const { data, error } = await supabase
+  const selectedKelas = document.getElementById("kelasSelect").value;
+  const judulElement = document.getElementById("judulJurnal");
+  const judulElementContainer = document.getElementById("judulContainer");
+  
+if (selectedKelas) {
+  judulElement.textContent = `Jurnal Kelas ${selectedKelas}`;
+  judulElement.style.display = "block";
+  judulElementContainer.style.display = "block";
+} else {
+  judulElement.textContent = "";
+  judulElement.style.display = "none";
+  judulElementContainer.style.display = "none";
+}
+
+  // Ambil data dari tabel jurnal + relasi mapel & guru
+  let query = supabase
     .from('jurnal')
-    .select('*')
-    .eq('guru_id', currentUser.id)   // 🔹 filter sesuai guru login
+    .select(`
+      *,
+      mapel:mapel_id (nama_mapel),
+      guru:guru_id (nama_lengkap)
+    `)
     .gte('tanggal', `${year}-${String(month).padStart(2, '0')}-01`)
     .lt('tanggal', `${year}-${String(month + 1).padStart(2, '0')}-01`)
     .order('tanggal', { ascending: true });
 
+  // Admin bisa lihat semua data, guru hanya lihat miliknya
+  if (currentUser.role !== 'admin') {
+    query = query.eq('guru_id', currentUser.id);
+  }
+
+  // Filter kelas jika dipilih
+  if (selectedKelas) {
+    query = query.eq('kelas', selectedKelas);
+  }
+
+  const { data, error } = await query;
+
   if (error) {
-    console.error(error);
+    console.error("Gagal ambil data jurnal:", error);
     return;
   }
 
+  // Simpan ke currentData per tanggal
   currentData = {};
   data.forEach(item => {
+    // Ambil nama_mapel dan nama_guru dari relasi Supabase
+    item.nama_mapel = item.mapel?.nama_mapel || "-";
+    item.nama_guru = item.guru?.nama_lengkap || "-";
+
     if (!currentData[item.tanggal]) currentData[item.tanggal] = [];
     currentData[item.tanggal].push(item);
   });
 }
+
+
 
 
   // === Hitung rangkuman mingguan (Ijin, Sakit, Alpha) ===
@@ -310,88 +357,63 @@ th:nth-child(8), td:nth-child(8) {
   }
 
   // === Buat tabel mingguan ===
-  function generateWeeklyJournal(weekNumber, monthName, year, month) {
-    const weekDates = getWeekDates(year, month, weekNumber);
-    let weekContent = `
-      <div class="minggu">
-      
+  // === Buat tabel mingguan ===
+function generateWeeklyJournal(weekNumber, monthName, year, month) {
+  const weekDates = getWeekDates(year, month, weekNumber);
+  let weekContent = `<div class="minggu">`;
+
+  hariList.forEach((hari, dayIdx) => {
+    const currentDate = weekDates[dayIdx];
+    const dayData = currentData[currentDate] || [];
+
+    weekContent += `
+      <div class="hari">
+        <h3>Hari / Tanggal: ${hari}, ${currentDate}</h3>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 20px; text-align:center;">No</th>
+              <th style="width: 40px; text-align:center;">Kelas</th>
+              <th style="width: 80px; text-align:center;">Mapel</th>
+              <th style="width: 100px; text-align:center;">Nama Guru</th>
+              <th style="width: 40px; text-align:center;">Jml Hadir</th>
+              <th style="width: 40px; text-align:center;">Jml Tidak Hadir</th>
+              <th style="text-align:center; max-width: 150px;">Nama Tidak Hadir</th>
+              <th style="text-align:center; max-width: 200px;">Kegiatan</th>
+              <th style="text-align:center; max-width: 200px;">Materi</th>
+              <th style="text-align:center; max-width: 200px;">Keterangan</th>
+            </tr>
+          </thead>
+          <tbody>
     `;
 
-    hariList.forEach((hari, dayIdx) => {
-      const currentDate = weekDates[dayIdx];
-      const dayData = currentData[currentDate] || [];
+    // 11 jam pelajaran
+    for (let i = 1; i <= 11; i++) {
+      const entry = dayData.find(e => i >= e.jam_awal && i <= e.jam_akhir);
 
-      weekContent += `
-        <div class="hari">
-          <h3>Hari / Tanggal: ${hari}, ${currentDate}</h3>
-          <table>
-            <thead>
-             <tr>
-      <th style="width: 20px; text-align:center;">No</th>
-      <th style="width: 40px; text-align:center;">Kelas</th>
-      <th style="width: 40px; white-space: normal; word-break: break-word; text-align:center;">
-        Jml Hadir
-      </th>
-      <th style="width: 40px; white-space: normal; word-break: break-word; text-align:center;">
-        Jml Tidak Hadir
-      </th>
-      <th style="text-align:center; max-width: 150px; white-space: normal; word-break: break-word;">
-  Nama Tidak Hadir
-</th>
-<th style="text-align:justify; max-width: 200px; white-space: normal; word-break: break-word;">
-  Kegiatan
-</th>
-<th style="text-align:justify; max-width: 200px; white-space: normal; word-break: break-word;">
-  Materi
-</th>
-<th style="text-align:justify; max-width: 200px; white-space: normal; word-break: break-word;">
-  Keterangan
-</th>
-    </tr>
-            </thead>
-            <tbody>
-      `;
-
-      // 11 nomor (jam)
-      for (let i = 1; i <= 11; i++) {
-        const entry = dayData.find(e => i >= e.jam_awal && i <= e.jam_akhir);
-
-        if (entry) {
-          if (i === entry.jam_awal) {
-            // Baris jam_awal → tampil data
-            weekContent += `
-              <tr>
-                <td>${i}</td>
-                <td>${entry.kelas || "-"}</td>
-                <td>${entry.jumlah_hadir ?? "-"}</td>
-                <td>${entry.jumlah_tidak_hadir ?? "-"}</td>
-                <td>${
-                  entry.nama_tidak_hadir 
-                    ? `<span title="${entry.nama_tidak_hadir}">${buatInisial(entry.nama_tidak_hadir)}</span>` 
-                    : "-"
-                }</td>
-                <td style="text-align: justify;">${entry.kegiatan || "-"}</td>
-<td style="text-align: justify;">${entry.materi || "-"}</td>
-<td style="text-align: justify;">${entry.keterangan || "-"}</td>
-              </tr>
-            `;
-          } else {
-            // Baris dalam rentang (jam_awal+1 ... jam_akhir) → tanda "-"
-            weekContent += `
-              <tr>
-                <td>${i}</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-            `;
-          }
+      if (entry) {
+        if (i === entry.jam_awal) {
+          // Baris jam awal → tampil data
+          weekContent += `
+            <tr>
+              <td>${i}</td>
+              <td>${entry.kelas || "-"}</td>
+              <td>${entry.nama_mapel || "-"}</td>
+              <td>${entry.nama_guru || "-"}</td>
+              <td>${entry.jumlah_hadir ?? "-"}</td>
+              <td>${entry.jumlah_tidak_hadir ?? "-"}</td>
+              <td>${
+                entry.nama_tidak_hadir
+                  ? `<span title="${entry.nama_tidak_hadir}">${buatInisial(entry.nama_tidak_hadir)}</span>`
+                  : "-"
+              }</td>
+              <td style="text-align: justify;">${entry.kegiatan || "-"}</td>
+              <td style="text-align: justify;">${entry.materi || "-"}</td>
+              <td style="text-align: justify;">${entry.keterangan || "-"}</td>
+            </tr>
+          `;
         } else {
-          // Tidak ada entry sama sekali
+          // Baris di tengah rentang jam
           weekContent += `
             <tr>
               <td>${i}</td>
@@ -402,69 +424,100 @@ th:nth-child(8), td:nth-child(8) {
               <td>-</td>
               <td>-</td>
               <td>-</td>
+              <td>-</td>
+              <td>-</td>
             </tr>
           `;
         }
-      }
-
-      weekContent += `
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      // Setelah hari Jumat → rangkuman
-      if (hari === "Jumat") {
-        const rangkuman = hitungRangkuman(weekDates);
+      } else {
+        // Tidak ada entry untuk jam ini
         weekContent += `
-         <table class="rangkuman">
-  <thead>
-    <tr>
-      <th colspan="3">Rangkuman Mingguan</th>
-    </tr>
-    <tr>
-      <th>Ijin</th>
-      <th>Sakit</th>
-      <th>Alpha</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>${rangkuman.totalIjin}</td>
-      <td>${rangkuman.totalSakit}</td>
-      <td>${rangkuman.totalAlpha}</td>
-    </tr>
-  </tbody>
-</table>
-
-
-          <div style="display:flex;justify-content:space-between;text-align:center;margin-top:40px;">
-
-  <!-- Kepala Sekolah -->
-  <div style="flex:1;">
-    <div style="margin-bottom:5px;">Mengetahui,</div>
-    <div style="margin-bottom:5px;">Kepala Sekolah</div>
-    <div style="margin:60px 0 5px;">_____________________</div>
-    <div style="margin:0;">NIP. ________________</div>
-  </div>
-
-  <!-- Guru Mata Pelajaran -->
-  <div style="flex:1;">
-    <div style="margin-bottom:5px;">..................., .......................</div>
-    <div style="margin-bottom:5px;">Guru Mata Pelajaran</div>
-    <div style="margin:60px 0 5px;">_____________________</div>
-    <div style="margin:0;">NIP. ________________</div>
-  </div>
-
-</div>
-
+          <tr>
+            <td>${i}</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
         `;
       }
-    });
+    }
 
-    weekContent += `</div>`;
-    return { content: weekContent, dates: weekDates };
+    weekContent += `
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Setelah hari Jumat → tambahkan rangkuman
+    if (hari === "Jumat") {
+      const rangkuman = hitungRangkuman(weekDates);
+      weekContent += `
+        <table class="rangkuman">
+          <thead>
+            <tr><th colspan="3">Rangkuman Mingguan</th></tr>
+            <tr><th>Ijin</th><th>Sakit</th><th>Alpha</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${rangkuman.totalIjin}</td>
+              <td>${rangkuman.totalSakit}</td>
+              <td>${rangkuman.totalAlpha}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="display:flex;justify-content:space-between;text-align:center;margin-top:40px;">
+          <div style="flex:1;">
+            <div>Mengetahui,</div>
+            <div>Kepala Sekolah</div>
+            <div style="margin:60px 0 5px;">_____________________</div>
+            <div>NIP. ________________</div>
+          </div>
+          <div style="flex:1;">
+            <div>..................., .......................</div>
+            <div>Guru Mata Pelajaran</div>
+            <div style="margin:60px 0 5px;">_____________________</div>
+            <div>NIP. ________________</div>
+          </div>
+        </div>
+      `;
+    }
+  });
+
+  weekContent += `</div>`;
+  return { content: weekContent, dates: weekDates };
+}
+
+// === Ambil daftar kelas unik dari tabel siswa ===
+async function loadKelasList() {
+  const kelasSelect = document.getElementById("kelasSelect");
+  kelasSelect.innerHTML = '<option value="">Memuat...</option>';
+
+  const { data, error } = await supabase
+    .from('siswa')
+    .select('kelas')
+    .neq('kelas', null)
+    .order('kelas', { ascending: true });
+
+  if (error) {
+    console.error("Gagal memuat kelas:", error);
+    kelasSelect.innerHTML = '<option value="">Gagal memuat kelas</option>';
+    return;
   }
+
+  // Ambil nilai kelas unik
+  const uniqueKelas = [...new Set(data.map(d => d.kelas))];
+
+  kelasSelect.innerHTML = '<option value="">-- Semua Kelas --</option>' +
+    uniqueKelas.map(k => `<option value="${k}">${k}</option>`).join('');
+}
+
 
   // === Generate jurnal bulanan ===
   async function generateMonthlyJournal() {
@@ -489,7 +542,9 @@ th:nth-child(8), td:nth-child(8) {
   }
 
   // === Jalankan awal ===
-  generateMonthlyJournal();
+ // Jalankan awal
+loadKelasList(); // 🔹 Muat daftar kelas dari tabel siswa
+generateMonthlyJournal(); // 🔹 Tampilkan jurnal awal
 
 
 </script>

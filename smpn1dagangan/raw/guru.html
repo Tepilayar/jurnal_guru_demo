@@ -155,10 +155,15 @@
     </div>
 
     <script>
+          const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            alert('Silakan login terlebih dahulu.');
+            window.location.href = 'index.html';
+        }
         // Initialize Supabase
         const supabaseUrl = 'https://ztsckdzdqyfsdwmkoedq.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0c2NrZHpkcXlmc2R3bWtvZWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NTE5NjIsImV4cCI6MjA3NTIyNzk2Mn0.9gqhfVXGTKttiXrBX9rCZTp9uq-MhjDwNHq23R_ukjo';
-          const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         // Teachers data will be loaded from database
         let teachers = [];
@@ -594,5 +599,4 @@
             document.getElementById('nextBtn').addEventListener('click', nextPage);
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'986bdab480910af4',t:'MTc1OTE1MjgyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
