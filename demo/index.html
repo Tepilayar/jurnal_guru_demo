@@ -1631,11 +1631,7 @@
         hasilRekap = hasilRekap.filter(r => r.kelas === kelas);
     }
 
-    hasilRekap.sort((a, b) => {
-    if (a.kelas < b.kelas) return -1;
-    if (a.kelas > b.kelas) return 1;
-    return a.nama_siswa.localeCompare(b.nama_siswa);
-});
+ 
 
     let html = `
         <h3 class="text-lg font-semibold mb-4">Rekap Semua Waktu</h3>
