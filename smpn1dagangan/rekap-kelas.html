@@ -211,9 +211,10 @@ th:nth-child(8), td:nth-child(8) {
 
 <script>
   // Initialize Supabase
-   const supabaseUrl = 'https://ztsckdzdqyfsdwmkoedq.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0c2NrZHpkcXlmc2R3bWtvZWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NTE5NjIsImV4cCI6MjA3NTIyNzk2Mn0.9gqhfVXGTKttiXrBX9rCZTp9uq-MhjDwNHq23R_ukjo';
-   const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseUrl = 'https://ztsckdzdqyfsdwmkoedq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0c2NrZHpkcXlmc2R3bWtvZWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NTE5NjIsImV4cCI6MjA3NTIyNzk2Mn0.9gqhfVXGTKttiXrBX9rCZTp9uq-MhjDwNHq23R_ukjo';
+                    
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   const hariList = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
   const bulanNama = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -293,7 +294,7 @@ if (selectedKelas) {
 }
 
   // Ambil data dari tabel jurnal + relasi mapel & guru
-  let query = supabase
+  let query = supabaseClient
     .from('jurnal')
     .select(`
       *,
@@ -498,7 +499,7 @@ async function loadKelasList() {
   const kelasSelect = document.getElementById("kelasSelect");
   kelasSelect.innerHTML = '<option value="">Memuat...</option>';
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('siswa')
     .select('kelas')
     .neq('kelas', null)
