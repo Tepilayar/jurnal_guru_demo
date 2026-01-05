@@ -200,31 +200,33 @@ th:nth-child(8), td:nth-child(8) {
 <div id="jurnal-container"></div>
 
 <script>
-  // 1. Cek apakah Library Supabase sudah terload
-  if (!window.supabase) {
-    alert("Gagal memuat Library Supabase. Periksa koneksi internet Anda atau link CDN.");
-    console.error("window.supabase is undefined");
-  }
-
-  // 2. Konfigurasi Supabase
+  // ==========================================
+  // 1. KONFIGURASI SUPABASE
+  // ==========================================
   const supabaseUrl = 'https://ztsckdzdqyfsdwmkoedq.supabase.co';
-  // Pastikan Key ini dalam satu baris (tidak boleh ada enter)
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0c2NrZHpkcXlmc2R3bWtvZWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NTE5NjIsImV4cCI6MjA3NTIyNzk2Mn0.9gqhfVXGTKttiXrBX9rCZTp9uq-MhjDwNHq23R_ukjo';
-              
-  // Inisialisasi Client
+  
+  // Pastikan library terload
   let supabase = null;
-  try {
+  if (window.supabase) {
     supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-  } catch (err) {
-    console.error("Error inisialisasi Supabase:", err);
+  } else {
+    alert("Library Supabase gagal dimuat. Cek koneksi internet.");
   }
 
+  // ==========================================
+  // 2. VARIABEL GLOBAL
+  // ==========================================
   const hariList = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
   const bulanNama = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
   const container = document.getElementById("jurnal-container");
   let currentData = {};
 
-  // === Fungsi bikin inisial ===
+  // ==========================================
+  // 3. FUNGSI HELPER
+  // ==========================================
+  
+  // Fungsi membuat inisial nama
   function buatInisial(namaList) {
     if (!namaList) return "-";
     return namaList
@@ -252,7 +254,7 @@ th:nth-child(8), td:nth-child(8) {
       .join(', ');
   }
 
-  // === Ambil tanggal minggu ke-x dalam bulan ===
+  // Ambil tanggal dalam satu minggu
   function getWeekDates(year, month, weekNumber) {
     const firstDay = new Date(year, month - 1, 1);
     const dayOfWeek = firstDay.getDay();
@@ -274,52 +276,7 @@ th:nth-child(8), td:nth-child(8) {
     return dates;
   }
 
-  // === Load data dari Supabase ===
-  async function loadJournalData(year, month) {
-    if (!supabase) {
-        alert("Supabase belum siap.");
-        return;
-    }
-
-    const currentUserRaw = localStorage.getItem('currentUser');
-    if (!currentUserRaw) {
-      alert("Anda harus login terlebih dahulu");
-      window.location.href = "dashboard.html"; 
-      return;
-    }
-    
-    let currentUser;
-    try {
-        currentUser = JSON.parse(currentUserRaw);
-    } catch (e) {
-        console.error("Error parsing user:", e);
-        return;
-    }
-
-    const { data, error } = await supabase
-      .from('jurnal')
-      .select('*')
-      .eq('guru_id', currentUser.id)
-      .gte('tanggal', `${year}-${String(month).padStart(2, '0')}-01`)
-      .lt('tanggal', `${year}-${String(month + 1).padStart(2, '0')}-01`)
-      .order('tanggal', { ascending: true });
-
-    if (error) {
-      console.error("Error fetch data:", error);
-      alert("Gagal mengambil data jurnal: " + error.message);
-      return;
-    }
-
-    currentData = {};
-    if (data) {
-        data.forEach(item => {
-            if (!currentData[item.tanggal]) currentData[item.tanggal] = [];
-            currentData[item.tanggal].push(item);
-        });
-    }
-  }
-
-  // === Hitung rangkuman mingguan ===
+  // Hitung rangkuman (Sakit, Ijin, Alpha)
   function hitungRangkuman(weekDates) {
     let totalIjin = 0, totalSakit = 0, totalAlpha = 0;
 
@@ -338,7 +295,49 @@ th:nth-child(8), td:nth-child(8) {
     return { totalIjin, totalSakit, totalAlpha };
   }
 
-  // === Buat tabel mingguan ===
+  // ==========================================
+  // 4. LOAD DATA DARI DATABASE
+  // ==========================================
+  async function loadJournalData(year, month) {
+    if (!supabase) return;
+
+    // Cek Login User
+    const currentUserRaw = localStorage.getItem('currentUser');
+    if (!currentUserRaw) {
+        alert("Anda harus login terlebih dahulu");
+        window.location.href = "dashboard.html";
+        return;
+    }
+    const currentUser = JSON.parse(currentUserRaw);
+
+    // Fetch Data
+    const { data, error } = await supabase
+      .from('jurnal')
+      .select('*')
+      .eq('guru_id', currentUser.id)
+      .gte('tanggal', `${year}-${String(month).padStart(2, '0')}-01`)
+      .lt('tanggal', `${year}-${String(month + 1).padStart(2, '0')}-01`)
+      .order('tanggal', { ascending: true });
+
+    if (error) {
+      console.error(error);
+      alert("Gagal mengambil data: " + error.message);
+      return;
+    }
+
+    // Grouping Data by Tanggal
+    currentData = {};
+    if (data) {
+        data.forEach(item => {
+            if (!currentData[item.tanggal]) currentData[item.tanggal] = [];
+            currentData[item.tanggal].push(item);
+        });
+    }
+  }
+
+  // ==========================================
+  // 5. GENERATE HTML JURNAL
+  // ==========================================
   function generateWeeklyJournal(weekNumber, monthName, year, month) {
     const weekDates = getWeekDates(year, month, weekNumber);
     let weekContent = `<div class="minggu">`;
@@ -353,20 +352,20 @@ th:nth-child(8), td:nth-child(8) {
           <table>
             <thead>
              <tr>
-                <th style="width: 20px; text-align:center;">No</th>
-                <th style="width: 40px; text-align:center;">Kelas</th>
-                <th style="width: 40px; text-align:center;">Jml Hadir</th>
-                <th style="width: 40px; text-align:center;">Jml Tidak Hadir</th>
-                <th style="text-align:center; max-width: 150px;">Nama Tidak Hadir</th>
-                <th style="text-align:justify; max-width: 200px;">Kegiatan</th>
-                <th style="text-align:justify; max-width: 200px;">Materi</th>
-                <th style="text-align:justify; max-width: 200px;">Keterangan</th>
+                <th style="width: 20px;">No</th>
+                <th style="width: 40px;">Kelas</th>
+                <th style="width: 40px;">Hadir</th>
+                <th style="width: 40px;">Absen</th>
+                <th style="width: 150px;">Nama Siswa</th>
+                <th>Kegiatan</th>
+                <th>Materi</th>
+                <th>Ket</th>
             </tr>
             </thead>
             <tbody>
       `;
 
-      // 11 jam pelajaran
+      // Loop 11 Jam Pelajaran
       for (let i = 1; i <= 11; i++) {
         const entry = dayData.find(e => i >= e.jam_awal && i <= e.jam_akhir);
 
@@ -378,37 +377,25 @@ th:nth-child(8), td:nth-child(8) {
                 <td>${entry.kelas || "-"}</td>
                 <td>${entry.jumlah_hadir ?? "-"}</td>
                 <td>${entry.jumlah_tidak_hadir ?? "-"}</td>
-                <td>${
-                  entry.nama_tidak_hadir 
-                    ? `<span title="${entry.nama_tidak_hadir}">${buatInisial(entry.nama_tidak_hadir)}</span>` 
-                    : "-"
-                }</td>
-                <td style="text-align: justify;">${entry.kegiatan || "-"}</td>
-                <td style="text-align: justify;">${entry.materi || "-"}</td>
-                <td style="text-align: justify;">${entry.keterangan || "-"}</td>
+                <td>${entry.nama_tidak_hadir ? `<span title="${entry.nama_tidak_hadir}">${buatInisial(entry.nama_tidak_hadir)}</span>` : "-"}</td>
+                <td style="text-align:justify;">${entry.kegiatan || "-"}</td>
+                <td style="text-align:justify;">${entry.materi || "-"}</td>
+                <td style="text-align:justify;">${entry.keterangan || "-"}</td>
               </tr>
             `;
           } else {
-             // Baris kosong untuk jam yang tergabung
-            weekContent += `
-              <tr>
-                <td>${i}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-              </tr>
-            `;
+             // Baris untuk jam yang digabung (merged)
+             weekContent += `<tr><td>${i}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
           }
         } else {
-          // Tidak ada data
-          weekContent += `
-            <tr>
-              <td>${i}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-            </tr>
-          `;
+          // Tidak ada data di jam ini
+          weekContent += `<tr><td>${i}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
         }
       }
 
       weekContent += `</tbody></table></div>`;
 
-      // Rangkuman Mingguan di Hari Jumat
+      // Jika Hari Jumat, Tambahkan Rangkuman & TTD
       if (hari === "Jumat") {
         const rangkuman = hitungRangkuman(weekDates);
         weekContent += `
@@ -426,17 +413,17 @@ th:nth-child(8), td:nth-child(8) {
             </tbody>
         </table>
 
-        <div style="display:flex;justify-content:space-between;text-align:center;margin-top:40px;">
-          <div style="flex:1;">
+        <div class="tanda-tangan">
+          <div>
             <div style="margin-bottom:5px;">Mengetahui,</div>
             <div style="margin-bottom:5px;">Kepala Sekolah</div>
-            <div style="margin:60px 0 5px;">_____________________</div>
+            <p>_____________________</p>
             <div style="margin:0;">NIP. ________________</div>
           </div>
-          <div style="flex:1;">
+          <div>
             <div style="margin-bottom:5px;">..................., .......................</div>
             <div style="margin-bottom:5px;">Guru Mata Pelajaran</div>
-            <div style="margin:60px 0 5px;">_____________________</div>
+            <p>_____________________</p>
             <div style="margin:0;">NIP. ________________</div>
           </div>
         </div>
@@ -445,48 +432,51 @@ th:nth-child(8), td:nth-child(8) {
     });
 
     weekContent += `</div>`;
-    return { content: weekContent, dates: weekDates };
+    return { content: weekContent };
   }
 
-  // === Main Function: Generate Jurnal Bulanan ===
-  // Fungsi ini harus didefinisikan dengan benar agar bisa dipanggil onchange
+  // ==========================================
+  // 6. FUNGSI UTAMA (DIPANGGIL OLEH HTML)
+  // ==========================================
   async function generateMonthlyJournal() {
     try {
-        const selectedMonth = parseInt(document.getElementById("bulanSelect").value);
-        const selectedYear = parseInt(document.getElementById("tahunSelect").value);
+        const bulanEl = document.getElementById("bulanSelect");
+        const tahunEl = document.getElementById("tahunSelect");
+
+        const selectedMonth = parseInt(bulanEl.value);
+        const selectedYear = parseInt(tahunEl.value);
 
         if (!selectedMonth) {
           container.innerHTML = `<h2 style="text-align:center;color:#666;">Silakan pilih bulan untuk menampilkan jurnal</h2>`;
           return;
         }
 
-        container.innerHTML = '<div class="loading">Memuat data...</div>';
+        container.innerHTML = '<div class="loading">Sedang memuat data...</div>';
         
-        // Panggil fungsi load data
         await loadJournalData(selectedYear, selectedMonth);
 
         container.innerHTML = "";
         const monthName = bulanNama[selectedMonth];
 
-        // Generate 5 minggu
+        // Loop 5 Minggu
         for (let week = 1; week <= 5; week++) {
           const weekResult = generateWeeklyJournal(week, monthName, selectedYear, selectedMonth);
           container.innerHTML += weekResult.content;
         }
+
     } catch (e) {
         console.error("Error generating journal:", e);
-        container.innerHTML = `<div style="color:red; text-align:center;">Terjadi kesalahan: ${e.message}</div>`;
+        container.innerHTML = `<p style="color:red; text-align:center;">Terjadi kesalahan: ${e.message}</p>`;
     }
   }
 
-  // === Jalankan otomatis saat halaman dimuat ===
-  // Pastikan DOM sudah siap
-  document.addEventListener("DOMContentLoaded", function() {
-      // Cek apakah ada nilai default di select, jika ya jalankan
-      if(document.getElementById("bulanSelect").value) {
-          generateMonthlyJournal();
-      }
-  });
+  // ==========================================
+  // 7. INISIALISASI SAAT LOAD
+  // ==========================================
+  // Jalankan sekali saat halaman terbuka jika bulan sudah terpilih
+  if(document.getElementById("bulanSelect").value) {
+     generateMonthlyJournal();
+  }
 
 </script>
 </html>
