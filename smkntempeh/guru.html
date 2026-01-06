@@ -163,7 +163,7 @@
         // Initialize Supabase
         const supabaseUrl = 'https://styaprymdezgmrkldpjl.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0eWFwcnltZGV6Z21ya2xkcGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MjI0MzQsImV4cCI6MjA3NTI5ODQzNH0.KzjRNqan2Qv_B0B33_Eo0qvRZhi5nRTFYz0g301AZ6k';
-          const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+          const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         // Teachers data will be loaded from database
         let teachers = [];
@@ -175,7 +175,7 @@
         // Load subjects from database
         async function loadSubjects() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('mapel')
                     .select('*')
                     .order('nama_mapel', { ascending: true });
@@ -216,7 +216,7 @@
         // Load teachers from database
         async function loadTeachers() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('users')
                     .select('*')
                     .eq('role', 'teacher')
@@ -250,7 +250,7 @@
             const password = document.getElementById('teacherPassword').value;
             
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('users')
                     .insert([
                         {
@@ -303,7 +303,7 @@
                             const [name, nip, subject, password] = line.split(',').map(item => item.trim());
                             if (name && nip && subject && password) {
                                 try {
-                                    const { error } = await supabase
+                                    const { error } = await supabaseClient
                                         .from('users')
                                         .insert([
                                             {
@@ -389,7 +389,7 @@
                 // Always update password
                 updateData.password = password;
 
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('users')
                     .update(updateData)
                     .eq('id', teacher.id);
@@ -412,7 +412,7 @@
                 const teacher = teachers[index];
                 
                 try {
-                    const { error } = await supabase
+                    const { error } = await supabaseClient
                         .from('users')
                         .delete()
                         .eq('id', teacher.id);
