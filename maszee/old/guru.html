@@ -155,11 +155,15 @@
     </div>
 
     <script>
+           const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            alert('Silakan login terlebih dahulu.');
+            window.location.href = 'index.html';
+        }
         // Initialize Supabase
- const supabaseUrl = 'https://twhcvbhxhlborqecnhjg.supabase.co';
+        const supabaseUrl = 'https://twhcvbhxhlborqecnhjg.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3aGN2Ymh4aGxib3JxZWNuaGpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4MjM1MDMsImV4cCI6MjA3NTM5OTUwM30.3o7DrZ5iP84cNLOjUg2UdENZEx7LeO5nyLp-TMmnsq8';
-       
-         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+          const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         // Teachers data will be loaded from database
         let teachers = [];
@@ -171,7 +175,7 @@
         // Load subjects from database
         async function loadSubjects() {
             try {
-                const { data, error } = await supabaseClient
+                const { data, error } = await supabase
                     .from('mapel')
                     .select('*')
                     .order('nama_mapel', { ascending: true });
@@ -212,7 +216,7 @@
         // Load teachers from database
         async function loadTeachers() {
             try {
-                const { data, error } = await supabaseClient
+                const { data, error } = await supabase
                     .from('users')
                     .select('*')
                     .eq('role', 'teacher')
@@ -246,7 +250,7 @@
             const password = document.getElementById('teacherPassword').value;
             
             try {
-                const { data, error } = await supabaseClient
+                const { data, error } = await supabase
                     .from('users')
                     .insert([
                         {
@@ -299,7 +303,7 @@
                             const [name, nip, subject, password] = line.split(',').map(item => item.trim());
                             if (name && nip && subject && password) {
                                 try {
-                                    const { error } = await supabaseClient
+                                    const { error } = await supabase
                                         .from('users')
                                         .insert([
                                             {
@@ -385,7 +389,7 @@
                 // Always update password
                 updateData.password = password;
 
-                const { error } = await supabaseClient
+                const { error } = await supabase
                     .from('users')
                     .update(updateData)
                     .eq('id', teacher.id);
@@ -408,7 +412,7 @@
                 const teacher = teachers[index];
                 
                 try {
-                    const { error } = await supabaseClient
+                    const { error } = await supabase
                         .from('users')
                         .delete()
                         .eq('id', teacher.id);

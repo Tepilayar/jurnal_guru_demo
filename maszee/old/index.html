@@ -46,7 +46,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center py-4">
                     <div>
-                        <h1 class="text-xl font-bold text-gray-900">Dashboard Presensi</h1>
+                        <h1 class="text-2xl font-bold text-gray-900">📚 Dashboard Presensi</h1>
                         <p id="userInfo" class="text-sm text-gray-600"></p>
                     </div>
                     <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-200">
@@ -57,23 +57,12 @@
         </header>
 
         <!-- Main Menu -->
-       <div id="mainMenu" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="mainMenu" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <div id="menuManajemenSiswa" onclick="showPage('manajemenSiswa')" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
                     <div class="text-4xl mb-4">👥</div>
                     <h3 class="text-lg font-semibold text-gray-800">Manajemen Siswa</h3>
                     <p class="text-gray-600 text-sm mt-2">Kelola data siswa</p>
-                </div>
-                <div id="menuManajemenGuru" onclick="window.location.href='/demo/guru.html'" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
-                    <div class="text-4xl mb-4">🧑‍🏫</div>
-                    <h3 class="text-lg font-semibold text-gray-800">Manajemen Guru</h3>
-                    <p class="text-gray-600 text-sm mt-2">Kelola data Guru</p>
-                </div>
-
-                <div id="menuManajemenMapel" onclick="window.location.href='/demo/mapel.html'" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
-                    <div class="text-4xl mb-4">📕</div>
-                    <h3 class="text-lg font-semibold text-gray-800">Manajemen Mapel</h3>
-                    <p class="text-gray-600 text-sm mt-2">Kelola data Mapel</p>
                 </div>
                 <div onclick="showPage('inputPresensi')" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
                     <div class="text-4xl mb-4">✅</div>
@@ -89,11 +78,6 @@
                     <div class="text-4xl mb-4">📝</div>
                     <h3 class="text-lg font-semibold text-gray-800">Rekap Jurnal</h3>
                     <p class="text-gray-600 text-sm mt-2">Lihat jurnal mengajar</p>
-                </div>
-                <div id="menuJurnalkelas" onclick="window.location.href='/demo/rekap-kelas.html'" class="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition duration-300 text-center">
-                    <div class="text-4xl mb-4">📕</div>
-                    <h3 class="text-lg font-semibold text-gray-800">Jurnal Kelas</h3>
-                    <p class="text-gray-600 text-sm mt-2">Lihat Jurnal Kelas</p>
                 </div>
             </div>
         </div>
@@ -326,9 +310,19 @@
                         </select>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <button onclick="loadJurnal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Tampilkan</button>
-                        <button onclick="window.location.href='/demo/rekap.html'" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">📄 Download PDF</button>
-                    </div>
+  <button 
+    onclick="loadJurnal()" 
+    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+    Tampilkan
+  </button>
+
+  <button 
+    onclick="window.location.href = window.location.origin + '/maszee/rekap.html'" 
+    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+    📄 Download PDF
+  </button>
+</div>
+
                 </div>
             </div>
 
@@ -489,6 +483,7 @@
         const supabaseUrl = 'https://twhcvbhxhlborqecnhjg.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3aGN2Ymh4aGxib3JxZWNuaGpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4MjM1MDMsImV4cCI6MjA3NTM5OTUwM30.3o7DrZ5iP84cNLOjUg2UdENZEx7LeO5nyLp-TMmnsq8';
        
+        
         const { createClient } = supabase;
         const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
@@ -566,12 +561,14 @@
         async function loadAllData() {
             try {
                 // Load siswa data with new fields
-                const { data: siswa, error: siswaError } = await supabaseClient
-                    .from('siswa')
-                    .select('*')
-                    .order('nama');
-                if (siswaError) throw siswaError;
-                siswaData = siswa || [];
+              const { data: siswa, error: siswaError } = await supabaseClient
+  .from('siswa')
+  .select('*')
+  .order('kelas', { ascending: true })
+  .order('nama', { ascending: true });
+
+if (siswaError) throw siswaError;
+siswaData = siswa || [];
 
                 // Load presensi data with guru filter
                 let presensiQuery = supabaseClient
@@ -625,33 +622,7 @@
                     console.log('Database authentication failed, using fallback:', error);
                     // Fallback to hardcoded users
                     const validUsers = [
-                        {
-                            id: 'admin-001',
-                            username: 'admin',
-                            password: 'admin123',
-                            nama_lengkap: 'Administrator',
-                            role: 'admin',
-                            mapel: null,
-                            is_active: true
-                        },
-                        {
-                            id: 'guru-001',
-                            username: 'guru1',
-                            password: 'guru123',
-                            nama_lengkap: 'Guru Matematika',
-                            role: 'teacher',
-                            mapel: 'Matematika',
-                            is_active: true
-                        },
-                        {
-                            id: 'guru-002',
-                            username: 'guru2',
-                            password: 'guru123',
-                            nama_lengkap: 'Guru Bahasa Indonesia',
-                            role: 'teacher',
-                            mapel: 'Bahasa Indonesia',
-                            is_active: true
-                        }
+                      
                     ];
                     
                     const user = validUsers.find(u => 
@@ -673,33 +644,7 @@
                 console.error('Error authenticating user:', error);
                 // Fallback authentication
                 const validUsers = [
-                    {
-                        id: 'admin-001',
-                        username: 'admin',
-                        password: 'admin123',
-                        nama_lengkap: 'Administrator',
-                        role: 'admin',
-                        mapel: null,
-                        is_active: true
-                    },
-                    {
-                        id: 'guru-001',
-                        username: 'guru1',
-                        password: 'guru123',
-                        nama_lengkap: 'Guru Matematika',
-                        role: 'teacher',
-                        mapel: 'Matematika',
-                        is_active: true
-                    },
-                    {
-                        id: 'guru-002',
-                        username: 'guru2',
-                        password: 'guru123',
-                        nama_lengkap: 'Guru Bahasa Indonesia',
-                        role: 'teacher',
-                        mapel: 'Bahasa Indonesia',
-                        is_active: true
-                    }
+                    
                 ];
                 
                 const user = validUsers.find(u => 
@@ -857,7 +802,7 @@
 
                 populateMapelDropdowns();
                 console.log('Mapel options loaded successfully');
-                // showAlert(`${mapelData.length} mata pelajaran berhasil dimuat`, 'success');
+                showAlert(`${mapelData.length} mata pelajaran berhasil dimuat`, 'success');
 
             } catch (error) {
                 console.error('Error loading mapel options:', error);
@@ -989,7 +934,8 @@
 
         // Set tanggal hari ini dan load data
         document.addEventListener('DOMContentLoaded', async function() {
-            const today = new Date().toISOString().split('T')[0];
+            //const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toLocaleDateString('en-CA');
             document.getElementById('tanggalPresensi').value = today;
             document.getElementById('filterTanggal').value = today;
             document.getElementById('filterTanggalJurnal').value = today;
@@ -1021,7 +967,7 @@
                 await loadMapelOptions();
             }
             
-            // showAlert('Aplikasi berhasil terhubung ke database.', 'success');
+            showAlert('Aplikasi berhasil terhubung ke database.', 'success');
         });
 
         // Login Function
@@ -1069,29 +1015,13 @@
             document.getElementById('userInfo').textContent = '';
         }
 
-       function updateMenuVisibility() {
+        function updateMenuVisibility() {
             const menuManajemenSiswa = document.getElementById('menuManajemenSiswa');
             
             if (currentUser && currentUser.role === 'teacher') {
                 menuManajemenSiswa.style.display = 'none';
             } else {
                 menuManajemenSiswa.style.display = 'block';
-            }
-
-            const menuManajemenMapel = document.getElementById('menuManajemenMapel');
-            
-            if (currentUser && currentUser.role === 'teacher') {
-                menuManajemenMapel.style.display = 'none';
-            } else {
-                menuManajemenMapel.style.display = 'block';
-            }
-
-            const menuManajemenGuru = document.getElementById('menuManajemenGuru');
-            
-            if (currentUser && currentUser.role === 'teacher') {
-                menuManajemenGuru.style.display = 'none';
-            } else {
-                menuManajemenGuru.style.display = 'block';
             }
         }
 
@@ -1609,88 +1539,83 @@
             document.getElementById('hasilRekap').innerHTML = html;
         }
 
-      async function rekapSemuaWaktu() {
-    const kelas = document.getElementById('filterKelasRekap').value;
-
-   
-    // Ambil data rekap langsung dari fungsi RPC
-    const { data, error } = await supabaseClient.rpc('rekap_presensi_guru', {
-        guru_uuid: currentUser.id, // auth_id guru aktif
-        bulan: null, // tampilkan semua waktu
-        tahun: null
-    });
-
-    if (error) {
-        console.error('RPC Error:', error);
-        alert('Gagal memuat rekap presensi.');
-        return;
-    }
-
-    // Filter hasil berdasarkan kelas (kalau dipilih)
-    let hasilRekap = data;
-    if (kelas) {
-        hasilRekap = hasilRekap.filter(r => r.kelas === kelas);
-    }
-
- hasilRekap.sort((a, b) => {
-    return (a.kelas ?? '').localeCompare(b.kelas ?? '') ||
-           (a.nama_siswa ?? '').localeCompare(b.nama_siswa ?? '');
-});
-
-
-    let html = `
-        <h3 class="text-lg font-semibold mb-4">Rekap Semua Waktu</h3>
-        <p class="text-sm text-gray-600 mb-4">Menampilkan rekap presensi untuk mata pelajaran yang Anda ajar</p>
-        <div class="overflow-x-auto">
-            <table class="w-full table-auto">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-4 py-2 text-left">No</th>
-                        <th class="px-4 py-2 text-left">Nama</th>
-                        <th class="px-4 py-2 text-left">Kelas</th>
-                        <th class="px-4 py-2 text-left">Hadir</th>
-                        <th class="px-4 py-2 text-left">Sakit</th>
-                        <th class="px-4 py-2 text-left">Ijin</th>
-                        <th class="px-4 py-2 text-left">Alpha</th>
-                        <th class="px-4 py-2 text-left">Dispen</th>
-                        <th class="px-4 py-2 text-left">Total</th>
-                        <th class="px-4 py-2 text-left">Persentase</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
-    if (!hasilRekap || hasilRekap.length === 0) {
-        html += `
-            <tr>
-                <td colspan="10" class="px-4 py-8 text-center text-gray-500">
-                    Tidak ada data presensi untuk mata pelajaran yang Anda ajar
-                </td>
-            </tr>
-        `;
-    } else {
-        hasilRekap.forEach((r, index) => {
-            html += `
-                <tr class="border-b">
-                    <td class="px-4 py-2">${index + 1}</td>
-                    <td class="px-4 py-2">${r.nama_siswa}</td>
-                    <td class="px-4 py-2">${r.kelas}</td>
-                    <td class="px-4 py-2 text-green-600">${r.total_hadir}</td>
-                    <td class="px-4 py-2 text-yellow-600">${r.total_sakit}</td>
-                    <td class="px-4 py-2 text-blue-600">${r.total_ijin}</td>
-                    <td class="px-4 py-2 text-red-600">${r.total_alpha}</td>
-                    <td class="px-4 py-2 text-purple-600">${r.total_dispen}</td>
-                    <td class="px-4 py-2 font-semibold">${r.total_semua}</td>
-                    <td class="px-4 py-2 font-semibold">${r.persentase}%</td>
-                </tr>
+        function rekapSemuaWaktu() {
+            const kelas = document.getElementById('filterKelasRekap').value;
+            
+            const presensiGuru = presensiData.filter(p => p.guru_id == currentUser.id);
+            
+            const siswaIds = [...new Set(presensiGuru.map(p => p.siswa_id))];
+            let siswaFilter = siswaData.filter(s => siswaIds.includes(s.id));
+            
+            if (kelas) {
+                siswaFilter = siswaFilter.filter(s => s.kelas === kelas);
+            }
+            
+            let html = `
+                <h3 class="text-lg font-semibold mb-4">Rekap Semua Waktu</h3>
+                <p class="text-sm text-gray-600 mb-4">Menampilkan rekap presensi untuk mata pelajaran yang Anda ajar</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-2 text-left">No</th>
+                                <th class="px-4 py-2 text-left">Nama</th>
+                                <th class="px-4 py-2 text-left">NIS</th>
+                                <th class="px-4 py-2 text-left">Kelas</th>
+                                <th class="px-4 py-2 text-left">Hadir</th>
+                                <th class="px-4 py-2 text-left">Sakit</th>
+                                <th class="px-4 py-2 text-left">Ijin</th>
+                                <th class="px-4 py-2 text-left">Alpha</th>
+                                <th class="px-4 py-2 text-left">Dispen</th>
+                                <th class="px-4 py-2 text-left">Total</th>
+                                <th class="px-4 py-2 text-left">Persentase</th>
+                            </tr>
+                        </thead>
+                        <tbody>
             `;
-        });
-    }
-
-    html += '</tbody></table></div>';
-    document.getElementById('hasilRekap').innerHTML = html;
-}
-
+            
+            if (siswaFilter.length === 0) {
+                html += `
+                    <tr>
+                        <td colspan="11" class="px-4 py-8 text-center text-gray-500">
+                            Tidak ada data presensi untuk mata pelajaran yang Anda ajar
+                        </td>
+                    </tr>
+                `;
+            } else {
+                siswaFilter.forEach((siswa, index) => {
+                    const presensiSiswa = presensiGuru.filter(p => p.siswa_id === siswa.id);
+                    
+                    const hadir = presensiSiswa.filter(p => p.status === 'Hadir').length;
+                    const sakit = presensiSiswa.filter(p => p.status === 'Sakit').length;
+                    const ijin = presensiSiswa.filter(p => p.status === 'Ijin').length;
+                    const alpha = presensiSiswa.filter(p => p.status === 'Alpha').length;
+                    const dispen = presensiSiswa.filter(p => p.status === 'Dispen').length;
+                    
+                    const total = presensiSiswa.length;
+                    const persentase = total > 0 ? (((hadir + dispen) / total) * 100).toFixed(1) : 0;
+                    
+                    html += `
+                        <tr class="border-b">
+                            <td class="px-4 py-2">${index + 1}</td>
+                            <td class="px-4 py-2">${siswa.nama}</td>
+                            <td class="px-4 py-2">${siswa.nis || '-'}</td>
+                            <td class="px-4 py-2">${siswa.kelas}</td>
+                            <td class="px-4 py-2 text-green-600">${hadir}</td>
+                            <td class="px-4 py-2 text-yellow-600">${sakit}</td>
+                            <td class="px-4 py-2 text-blue-600">${ijin}</td>
+                            <td class="px-4 py-2 text-red-600">${alpha}</td>
+                            <td class="px-4 py-2 text-purple-600">${dispen}</td>
+                            <td class="px-4 py-2 font-semibold">${total}</td>
+                            <td class="px-4 py-2 font-semibold">${persentase}%</td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            html += '</tbody></table></div>';
+            document.getElementById('hasilRekap').innerHTML = html;
+        }
 
         function loadJurnal() {
             const tanggal = document.getElementById('filterTanggalJurnal').value;
