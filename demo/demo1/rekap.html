@@ -204,7 +204,7 @@ th:nth-child(8), td:nth-child(8) {
   const supabaseUrl = 'https://sywjsrhlrskfsgbdrejk.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5d2pzcmhscnNrZnNnYmRyZWprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2MzE1NTcsImV4cCI6MjA3NDIwNzU1N30.dHphqWW274fZP3lO_5tGGiBupsGFCWUyeZzW1bT6dMc';
          
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   const hariList = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
   const bulanNama = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -269,7 +269,7 @@ th:nth-child(8), td:nth-child(8) {
     return;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('jurnal')
     .select('*')
     .eq('guru_id', currentUser.id)   // 🔹 filter sesuai guru login
